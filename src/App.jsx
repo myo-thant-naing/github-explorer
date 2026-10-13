@@ -1,9 +1,32 @@
+import { useState } from "react";
 import Nav from "./components/Nav";
 import SearchBar from "./components/SearchBar";
+import { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 
 const App = () => {
+  const [userData, setUserData] = useState(null | {});
+  const [loading, setLoading] = useState(false);
+  const onSubmitHandler = async (value) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`https://api.github.com/users/${value}`);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch user");
+      }
+
+      const data = await response.json();
+      setUserData(data);
+      setLoading(false);
+    } catch (error) {
+      toast.error(error.message);
+      setLoading(false);
+    }
+  };
   return (
     <div className="max-w-6xl flex flex-col space-y-10 p-4 mx-auto">
+      <Toaster />
       <Nav />
 
       {/* Hero */}
@@ -13,7 +36,8 @@ const App = () => {
           Github
         </span>
       </h1>
-      <SearchBar />
+      <SearchBar onSubmitHandler={onSubmitHandler} />
+      {loading && <p className="text-gray-600">Loading ...</p>}
     </div>
   );
 };

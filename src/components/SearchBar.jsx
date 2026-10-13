@@ -1,21 +1,27 @@
 import { useState } from "react";
 
-const SearchBar = () => {
-  const [repo, setRepo] = useState("");
-  const onSubmitHandler = (e) => {
+const SearchBar = ({ onSubmitHandler }) => {
+  const [username, setUsername] = useState("");
+  const onSubmit = (e) => {
     e.preventDefault();
-    console.log(repo);
+
+    const trimmedUsername = username.trim();
+
+    if (trimmedUsername !== "") {
+      onSubmitHandler(trimmedUsername);
+    }
   };
 
   return (
-    <form onSubmit={onSubmitHandler} className="bg-white flex rounded ">
+    <form onSubmit={onSubmit} className="bg-white flex rounded ">
       <input
         type="text"
         placeholder="Find a repository.."
         className="outline-none  w-full px-4"
         name="repo"
-        value={repo}
-        onChange={(e) => setRepo(e.target.value)}
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+        required
       />
       <button
         type="submit"
