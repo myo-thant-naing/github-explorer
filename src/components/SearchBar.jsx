@@ -1,11 +1,11 @@
 import { useState } from "react";
 
-const SearchBar = ({ onSubmitHandler }) => {
-  const [username, setUsername] = useState("");
+const SearchBar = ({ onSubmitHandler, mode }) => {
+  const [inputValue, setInputValue] = useState("");
   const onSubmit = (e) => {
     e.preventDefault();
 
-    const trimmedUsername = username.trim();
+    const trimmedUsername = inputValue.trim();
 
     if (trimmedUsername !== "") {
       onSubmitHandler(trimmedUsername);
@@ -16,11 +16,11 @@ const SearchBar = ({ onSubmitHandler }) => {
     <form onSubmit={onSubmit} className="bg-white flex rounded ">
       <input
         type="text"
-        placeholder="Find a repository.."
+        placeholder={`Find a ${mode === "profile" ? "username" : "repositorie"}..`}
         className="outline-none  w-full px-4"
         name="repo"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
         required
       />
       <button

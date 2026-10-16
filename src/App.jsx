@@ -4,23 +4,27 @@ import SearchBar from "./components/SearchBar";
 import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast";
 import UserCard from "./components/UserCard";
+import ModeToogleBtn from "./ModeToogleBtn";
+import RepoCard from "./RepoCard";
 
 const App = () => {
-  const [userData, setUserData] = useState({});
+  const [mode, setMode] = useState("profile");
+  const [Data, setData] = useState({});
   const [loading, setLoading] = useState(false);
   const onSubmitHandler = async (value) => {
     try {
       setLoading(true);
-      const response = await fetch(`https://api.github.com/users/${value}`);
+      const response = await fetch(
+        `${mode === "profile" ? "https://api.github.com/users/" + encodeURIComponent(value) : "https://api.github.com/search/repositories?q=" + encodeURIComponent(value)}`,
+      );
 
       if (response.status === 404) {
-        throw new Error("User not Found");
+        throw new Error("Not Found");
       } else if (!response.ok) {
-        throw new Error("Failed to fetch user");
+        throw new Error("Failed to fetch");
       }
       const data = await response.json();
-
-      setUserData(data);
+      setData(data);
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -32,15 +36,21 @@ const App = () => {
       <Toaster />
       <Nav />
       {/* Hero */}
+      <ModeToogleBtn setMode={setMode} mode={mode} setData={setData} />
       <h1 className="font-bold text-4xl max-w-90 bg-linear-to-r">
-        Explore repositories on{" "}
+        Explore {mode === "profile" ? "profile" : "repositories"} on{" "}
         <span className="bg-linear-to-r from-[#5044E5] to-[#4d8cea] bg-clip-text text-transparent">
           Github
         </span>
       </h1>
-      <SearchBar onSubmitHandler={onSubmitHandler} />
+      <SearchBar onSubmitHandler={onSubmitHandler} mode={mode} />
       {loading && <p className="text-gray-600">Loading ...</p>}
-      {Object.keys(userData).length > 0 && <UserCard userData={userData} />}
+      {Object.keys(Data).length > 0 && mode === "profile" && (
+        <UserCard userData={Data} />
+      )}
+      {Object.keys(Data).length > 0 &&
+        mode === "repositories" &&
+        Data.items?.map((repo, index) => <RepoCard key={index} repo={repo} />)}
     </div>
   );
 };
