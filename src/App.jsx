@@ -6,27 +6,23 @@ import toast from "react-hot-toast";
 import UserCard from "./components/UserCard";
 import ModeToogleBtn from "./ModeToogleBtn";
 import RepoCard from "./RepoCard";
+import github from "./api/github";
 
 const App = () => {
   const [mode, setMode] = useState("profile");
   const [Data, setData] = useState({});
   const [loading, setLoading] = useState(false);
   const onSubmitHandler = async (value) => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const response = await fetch(
+      const [data, error] = await github(
         `${mode === "profile" ? "https://api.github.com/users/" + encodeURIComponent(value) : "https://api.github.com/search/repositories?q=" + encodeURIComponent(value)}`,
       );
-
-      if (response.status === 404) {
-        throw new Error("Not Found");
-      } else if (!response.ok) {
-        throw new Error("Failed to fetch");
+      if (error) {
+        toast.error(error);
+      } else {
+        setData(data);
       }
-      const data = await response.json();
-      setData(data);
-    } catch (error) {
-      toast.error(error.message);
     } finally {
       setLoading(false);
     }
