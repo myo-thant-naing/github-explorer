@@ -7,11 +7,15 @@ import UserCard from "./components/UserCard";
 import ModeToogleBtn from "./ModeToogleBtn";
 import RepoCard from "./RepoCard";
 import github from "./api/github";
+import Pagination from "./components/Pagination";
 
 const App = () => {
   const [mode, setMode] = useState("profile");
   const [Data, setData] = useState({});
   const [loading, setLoading] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
   const onSubmitHandler = async (value) => {
     setLoading(true);
     try {
@@ -27,6 +31,17 @@ const App = () => {
       setLoading(false);
     }
   };
+
+  let slicedData = [];
+  const totalPages = Math.ceil((Data.items?.length ?? 0) / itemsPerPage);
+
+  if (mode === "repositories" && Data.items) {
+    const lastIndex = currentPage * itemsPerPage;
+    const firstIndex = lastIndex - itemsPerPage;
+
+    slicedData = Data.items.slice(firstIndex, lastIndex);
+  }
+
   return (
     <div className="max-w-6xl flex flex-col space-y-10 p-4 mx-auto">
       <Toaster />
@@ -44,9 +59,21 @@ const App = () => {
       {Object.keys(Data).length > 0 && mode === "profile" && (
         <UserCard userData={Data} />
       )}
-      {Object.keys(Data).length > 0 &&
-        mode === "repositories" &&
-        Data.items?.map((repo, index) => <RepoCard key={index} repo={repo} />)}
+      {mode === "repositories" && slicedData && (
+        <>
+          <div className="space-y-4">
+            {slicedData.map((repo) => (
+              <RepoCard key={repo.id} repo={repo} />
+            ))}
+          </div>
+
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </>
+      )}
     </div>
   );
 };
