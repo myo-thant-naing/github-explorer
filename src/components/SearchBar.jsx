@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const SearchBar = ({ onSubmitHandler, mode }) => {
+const SearchBar = ({ onSubmitHandler, mode, loading }) => {
   const [inputValue, setInputValue] = useState("");
   const onSubmit = (e) => {
     e.preventDefault();
@@ -25,8 +25,15 @@ const SearchBar = ({ onSubmitHandler, mode }) => {
       />
       <button
         type="submit"
-        className="px-10 sm:w-1/5 h-full py-4 bg-primary text-white font-light">
-        Search
+        disabled={loading}
+        className={`px-10 sm:w-1/5 py-4 bg-primary text-white font-light flex items-center justify-center gap-2 transition-opacity duration-200 ${
+          loading ? "opacity-60" : "hover:opacity-90"
+        }`}>
+        {loading ? (
+          <span className="h-5 w-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+        ) : (
+          "Search"
+        )}
       </button>
     </form>
   );

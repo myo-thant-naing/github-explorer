@@ -8,10 +8,12 @@ import ModeToogleBtn from "./ModeToogleBtn";
 import RepoCard from "./RepoCard";
 import github from "./api/github";
 import Pagination from "./components/Pagination";
+import SubHeader from "./components/SubHeader";
 
 const App = () => {
   const [mode, setMode] = useState("profile");
   const [Data, setData] = useState({});
+  const [sort, setSort] = useState("desc");
   const [loading, setLoading] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -39,11 +41,19 @@ const App = () => {
     const lastIndex = currentPage * itemsPerPage;
     const firstIndex = lastIndex - itemsPerPage;
 
-    slicedData = Data.items.slice(firstIndex, lastIndex);
+    const sortedData =
+      sort === "asc"
+        ? [...Data.items].sort(
+            (a, b) => a.stargazers_count - b.stargazers_count,
+          )
+        : [...Data.items].sort(
+            (a, b) => b.stargazers_count - a.stargazers_count,
+          );
+    slicedData = sortedData.slice(firstIndex, lastIndex);
   }
 
   return (
-    <div className="max-w-6xl flex flex-col space-y-10 p-4 mx-auto">
+    <div className="max-w-6xl flex flex-col space-y-10 p-4 mx-auto relative">
       <Toaster />
       <Nav />
       {/* Hero */}
@@ -54,14 +64,22 @@ const App = () => {
           Github
         </span>
       </h1>
-      <SearchBar onSubmitHandler={onSubmitHandler} mode={mode} />
-      {loading && <p className="text-gray-600">Loading ...</p>}
+      <SearchBar
+        onSubmitHandler={onSubmitHandler}
+        mode={mode}
+        loading={loading}
+      />
       {Object.keys(Data).length > 0 && mode === "profile" && (
         <UserCard userData={Data} />
       )}
       {mode === "repositories" && slicedData && (
         <>
           <div className="space-y-4">
+            <SubHeader
+              sort={sort}
+              setSort={setSort}
+              setCurrentPage={setCurrentPage}
+            />
             {slicedData.map((repo) => (
               <RepoCard key={repo.id} repo={repo} />
             ))}
