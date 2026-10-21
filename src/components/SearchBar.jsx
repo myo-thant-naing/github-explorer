@@ -13,10 +13,10 @@ const SearchBar = ({ onSubmitHandler, mode, loading }) => {
   };
 
   return (
-    <form onSubmit={onSubmit} className="bg-white flex rounded ">
+    <form onSubmit={onSubmit} className="bg-white flex rounded">
       <input
         type="text"
-        placeholder={`Find a ${mode === "profile" ? "username" : "repositorie"}..`}
+        placeholder={`Find ${mode === "profile" ? "a username" : "repositories"}...`}
         className="outline-none  w-full px-4"
         name="repo"
         value={inputValue}

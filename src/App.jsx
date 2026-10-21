@@ -13,6 +13,7 @@ import SubHeader from "./components/SubHeader";
 const App = () => {
   const [mode, setMode] = useState("profile");
   const [Data, setData] = useState({});
+  const [seletedLanguage, setSeletedLanguage] = useState("JavaScript");
   const [sort, setSort] = useState("desc");
   const [loading, setLoading] = useState(false);
 
@@ -26,6 +27,7 @@ const App = () => {
       );
       if (error) {
         toast.error(error);
+        setData({});
       } else {
         setData(data);
       }
@@ -35,18 +37,38 @@ const App = () => {
   };
 
   let slicedData = [];
-  const totalPages = Math.ceil((Data.items?.length ?? 0) / itemsPerPage);
+  let totalPages = 0;
+  let languages = [];
 
   if (mode === "repositories" && Data.items) {
+    languages = [
+      ...new Set(
+        Data.items
+          .map((item) => item.language)
+          .filter((value) => value !== null),
+      ),
+    ];
     const lastIndex = currentPage * itemsPerPage;
     const firstIndex = lastIndex - itemsPerPage;
 
+    console.log(languages);
+
+    let filteredData = Data.items;
+
+    if (seletedLanguage !== "") {
+      filteredData = [...filteredData].filter((item) => {
+        if (item.language) {
+          return item.language.includes(seletedLanguage);
+        }
+      });
+    }
+    totalPages = Math.ceil((filteredData?.length ?? 0) / itemsPerPage);
     const sortedData =
       sort === "asc"
-        ? [...Data.items].sort(
+        ? [...filteredData].sort(
             (a, b) => a.stargazers_count - b.stargazers_count,
           )
-        : [...Data.items].sort(
+        : [...filteredData].sort(
             (a, b) => b.stargazers_count - a.stargazers_count,
           );
     slicedData = sortedData.slice(firstIndex, lastIndex);
@@ -58,7 +80,7 @@ const App = () => {
       <Nav />
       {/* Hero */}
       <ModeToogleBtn setMode={setMode} mode={mode} setData={setData} />
-      <h1 className="font-bold text-4xl max-w-90 bg-linear-to-r">
+      <h1 className="max-w-90 text-4xl font-bold">
         Explore {mode === "profile" ? "profile" : "repositories"} on{" "}
         <span className="bg-linear-to-r from-[#5044E5] to-[#4d8cea] bg-clip-text text-transparent">
           Github
@@ -79,6 +101,9 @@ const App = () => {
               sort={sort}
               setSort={setSort}
               setCurrentPage={setCurrentPage}
+              selectedLanguage={seletedLanguage}
+              setSelectedLanguage={setSeletedLanguage}
+              languages={languages}
             />
             {slicedData.map((repo) => (
               <RepoCard key={repo.id} repo={repo} />

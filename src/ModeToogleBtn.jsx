@@ -7,7 +7,7 @@ const ModeToogleBtn = ({ setMode, mode, setData }) => {
           setData({});
         }}
         className={`py-2 w-48 ${mode === "profile" ? "border bg-gray-100" : ""} rounded-full transition-all `}>
-        Users
+        User
       </button>
       <button
         onClick={() => {
