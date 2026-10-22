@@ -8,7 +8,7 @@ const SearchBar = ({ onSubmitHandler, mode, loading }) => {
     const trimmedUsername = inputValue.trim();
 
     if (trimmedUsername !== "") {
-      onSubmitHandler(trimmedUsername);
+      onSubmitHandler({ mode, value: trimmedUsername });
     }
   };
 

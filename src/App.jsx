@@ -5,34 +5,43 @@ import { Toaster } from "react-hot-toast";
 import toast from "react-hot-toast";
 import UserCard from "./components/UserCard";
 import ModeToogleBtn from "./ModeToogleBtn";
-import RepoCard from "./RepoCard";
+import RepoCard from "./components/RepoCard";
 import github from "./api/github";
 import Pagination from "./components/Pagination";
 import SubHeader from "./components/SubHeader";
 
 const App = () => {
   const [mode, setMode] = useState("profile");
-  const [Data, setData] = useState({});
-  const [seletedLanguage, setSeletedLanguage] = useState("JavaScript");
-  const [sort, setSort] = useState("desc");
+  const [data, setData] = useState({});
+  const [selectedLanguage, setSelectedLanguage] = useState("");
+  const [sortBy, setSortBy] = useState("stargazers_count");
+  const [sortOrder, setSortOrder] = useState("desc");
   const [loading, setLoading] = useState(false);
-
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
-  const onSubmitHandler = async (value) => {
-    setLoading(true);
-    try {
-      const [data, error] = await github(
-        `${mode === "profile" ? "https://api.github.com/users/" + encodeURIComponent(value) : "https://api.github.com/search/repositories?q=" + encodeURIComponent(value)}`,
+
+  const getApiUrl = ({ mode, value }) => {
+    if (mode === "profile") {
+      return "https://api.github.com/users/" + encodeURIComponent(value);
+    } else if (mode === "repositories") {
+      return (
+        "https://api.github.com/search/repositories?q=" +
+        encodeURIComponent(value)
       );
-      if (error) {
-        toast.error(error);
-        setData({});
-      } else {
-        setData(data);
-      }
+    }
+  };
+  const onSubmitHandler = async ({ mode, value }) => {
+    try {
+      setLoading(true);
+      const data = await github(getApiUrl({ mode, value }));
+      setData(data);
+      setSelectedLanguage("");
+    } catch (error) {
+      toast.error(error.message);
+      setData({});
     } finally {
       setLoading(false);
+      setCurrentPage(1);
     }
   };
 
@@ -40,37 +49,33 @@ const App = () => {
   let totalPages = 0;
   let languages = [];
 
-  if (mode === "repositories" && Data.items) {
+  if (mode === "repositories" && data.items) {
+    // filtering
     languages = [
       ...new Set(
-        Data.items
+        data.items
           .map((item) => item.language)
           .filter((value) => value !== null),
       ),
     ];
-    const lastIndex = currentPage * itemsPerPage;
-    const firstIndex = lastIndex - itemsPerPage;
-
-    console.log(languages);
-
-    let filteredData = Data.items;
-
-    if (seletedLanguage !== "") {
+    let filteredData = data.items;
+    if (selectedLanguage !== "") {
       filteredData = [...filteredData].filter((item) => {
         if (item.language) {
-          return item.language.includes(seletedLanguage);
+          return item.language === selectedLanguage;
         }
       });
     }
+    //  sorting
+    const sortedData = [...filteredData].sort((a, b) => {
+      const difference = a[sortBy] - b[sortBy];
+      return sortOrder === "asc" ? difference : -difference;
+    });
+
+    // pagination
+    const lastIndex = currentPage * itemsPerPage;
+    const firstIndex = lastIndex - itemsPerPage;
     totalPages = Math.ceil((filteredData?.length ?? 0) / itemsPerPage);
-    const sortedData =
-      sort === "asc"
-        ? [...filteredData].sort(
-            (a, b) => a.stargazers_count - b.stargazers_count,
-          )
-        : [...filteredData].sort(
-            (a, b) => b.stargazers_count - a.stargazers_count,
-          );
     slicedData = sortedData.slice(firstIndex, lastIndex);
   }
 
@@ -91,32 +96,39 @@ const App = () => {
         mode={mode}
         loading={loading}
       />
-      {Object.keys(Data).length > 0 && mode === "profile" && (
-        <UserCard userData={Data} />
+      {Object.keys(data).length > 0 && mode === "profile" && (
+        <UserCard userData={data} />
       )}
-      {mode === "repositories" && slicedData && (
-        <>
-          <div className="space-y-4">
-            <SubHeader
-              sort={sort}
-              setSort={setSort}
-              setCurrentPage={setCurrentPage}
-              selectedLanguage={seletedLanguage}
-              setSelectedLanguage={setSeletedLanguage}
-              languages={languages}
-            />
-            {slicedData.map((repo) => (
-              <RepoCard key={repo.id} repo={repo} />
-            ))}
-          </div>
+      {Object.keys(data).length > 0 &&
+        mode === "repositories" &&
+        slicedData && (
+          <>
+            <div className="space-y-4">
+              <SubHeader
+                sortBy={sortBy}
+                setSortBy={setSortBy}
+                sortOrder={sortOrder}
+                setSortOrder={setSortOrder}
+                setCurrentPage={setCurrentPage}
+                selectedLanguage={selectedLanguage}
+                setSelectedLanguage={setSelectedLanguage}
+                languages={languages}
+              />
+              {data.items?.length === 0 && (
+                <div className="text-gray-400">Empty</div>
+              )}
+              {slicedData.map((repo) => (
+                <RepoCard key={repo.id} repo={repo} />
+              ))}
+            </div>
 
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
-        </>
-      )}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </>
+        )}
     </div>
   );
 };
